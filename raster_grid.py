@@ -31,27 +31,27 @@ class RasterGrid:
         _iy: int
 
     def __init__(self,
-                 x0: float,
-                 y0: float,
-                 x1: float,
-                 y1: float,
-                 nx: int,
-                 ny: int) -> None:
-        self._x0 = x0
-        self._y0 = y0
-        self._x1 = x1
-        self._y1 = y1
-        self._nx = nx
-        self._ny = ny
-        self.nc = nx*ny
-        self.cells = [
-            self.Cell(i, j) for i in range(nx) for j in range(ny)
+                 lower_left_x: float,
+                 lower_left_y: float,
+                 upper_right_x: float,
+                 upper_right_y: float,
+                 number_of_cells_in_x_direction: int,
+                 number_of_cells_in_y_direction: int) -> None:
+        self._lower_left_x = lower_left_x
+        self._lower_left_y = lower_left_y
+        self._upper_right_x = upper_right_x
+        self._upper_right_y = upper_right_y
+        self._number_of_cells_in_x_direction = number_of_cells_in_x_direction
+        self._number_of_cells_in_y_direction = number_of_cells_in_y_direction
+        self.number_of_cells_total = self._number_of_cells_in_x_direction * self._number_of_cells_in_y_direction
+        self.cells_list = [
+            self.Cell(i, j) for i in range(self._number_of_cells_in_x_direction) for j in range(self._number_of_cells_in_y_direction)
         ]
 
-    def c(self, cell: Cell) -> Tuple[float, float]:
+    def compute_center_point_of_cell(self, cell: Cell) -> Tuple[float, float]:
         return (
-            self._x0 + (float(cell._ix) + 0.5)*(self._x1 - self._x0)/self._nx,
-            self._y0 + (float(cell._iy) + 0.5)*(self._y1 - self._y0)/self._ny
+            self._lower_left_x + (float(cell._ix) + 0.5)*(self._upper_right_x - self._lower_left_x)/self._number_of_cells_in_x_direction,
+            self._lower_left_y + (float(cell._iy) + 0.5)*(self._upper_right_y - self._lower_left_y)/self._number_of_cells_in_y_direction
         )
 
 
@@ -60,10 +60,10 @@ def test_number_of_cells():
     y0 = 0.0
     dx = 1.0
     dy = 1.0
-    assert RasterGrid(x0, y0, dx, dy, 10, 10).nc == 100
-    assert RasterGrid(x0, y0, dx, dy, 10, 20).nc == 200
-    assert RasterGrid(x0, y0, dx, dy, 20, 10).nc == 200
-    assert RasterGrid(x0, y0, dx, dy, 20, 20).nc == 400
+    assert RasterGrid(x0, y0, dx, dy, 10, 10).number_of_cells_total == 100
+    assert RasterGrid(x0, y0, dx, dy, 10, 20).number_of_cells_total == 200
+    assert RasterGrid(x0, y0, dx, dy, 20, 10).number_of_cells_total == 200
+    assert RasterGrid(x0, y0, dx, dy, 20, 20).number_of_cells_total == 400
 
 
 def test_cell_center():
@@ -75,9 +75,9 @@ def test_cell_center():
         (1.5, 1.5)
     ]
 
-    for cell in grid.cells:
+    for cell in grid.cells_list:
         for center in expected_centers:
-            if isclose(grid.c(cell)[0], center[0]) and isclose(grid.c(cell)[1], center[1]):
+            if isclose(grid.compute_center_point_of_cell(cell)[0], center[0]) and isclose(grid.compute_center_point_of_cell(cell)[1], center[1]):
                 expected_centers.remove(center)
 
     assert len(expected_centers) == 0
